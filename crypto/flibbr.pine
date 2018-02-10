@@ -1,0 +1,60 @@
+//* Full credits and appreciation to The Rational Flibbr Indicators Creator
+//* flibbr : flibbr.com : @flibbr 
+//* Consider tipping flibbr
+
+study(title="The Rational Flibbr Indicator v2", shorttitle="The Rational Flibbr Indicator v2")
+
+//Inputs
+
+useCustomTick = input(false, title="Custom ticker? [Y/N]", confirm=true)
+tickCustom = input(title="Symbol [e.g. BTCCNY:HUOBI]", type=string, defval="")
+useCustomRes = input(false, title="Custom time interval? [Y/N]", confirm=true)
+resCustom = input(title="Time interval (W, D, [min])", type=string, defval="")
+tickery = useCustomTick ? tickCustom : tickerid
+res = useCustomRes ? resCustom : period
+source = security(tickery, res, close)
+
+length = input(21, minval=1, title="Will")
+
+
+//Williams%R + EMA
+
+upper = highest(length)
+lower = lowest(length)
+out = 100 * (source - upper) / (upper - lower)
+src = out, len = input(13, minval=1, title="EMA")
+out2 = ema(out, len)
+
+
+//Inputs (2)
+
+Sup = input(-20, minval=-100, title="Level of stupidity UP")
+Sdown = input(-80, minval=-100, title="Level of stupidity DOWN")
+HCross = input(defval=true, type = bool, title="Highlight crossovers? [Y/N]")
+Flex = input(3, minval=1, maxval=10, title="Cross flexibility [1-10]")
+BGcoloring = input(defval=true, type = bool, title="Background coloring? [Y/N]")
+Transpa = input(65, title="Background color transparency [%]")
+
+
+//Plot
+
+band1 = hline(Sup, title="Band upperline", linestyle=dashed, linewidth=1, color= black)
+band0 = hline(Sdown, title="Band bottomline", linestyle=dashed, linewidth=1, color= black)
+top = hline(0, title="Top", linestyle=solid, linewidth=1, color= black)
+bottom = hline(-100, title="Bottom", linestyle=solid, linewidth=1, color= black)
+fill(band1, band0, color=white, transp=100, title="Inner band")
+
+plot(out >= Sup ? 0 : na, title="overbought", color=#FF5050, style=circles, linewidth=2, transp=50) 
+plot(out <= Sdown ? -100 : na, title="oversold", color=#99FF33, style=circles, linewidth=2, transp=50)
+plot((HCross and cross(out, out2) and out2 >= (Sup-Flex)) ? out2 : na,title="Overbought cross", color=red, style=circles, linewidth=4, transp=50)
+plot((HCross and cross(out, out2) and out2 <= (Sdown+Flex)) ? out2 : na,title="Oversold cross", color=#00FF00, style=circles, linewidth=4, transp=50)
+
+Will = plot(out, title="Will", color=#19193E, linewidth=1)
+EMA = plot(out2, title="EMA", color=(out2[0]>out2[1]? green:red), linewidth=2)
+
+plot((HCross and cross(out, out2) and out2 >= (Sup-Flex)) or (HCross and cross(out, out2) and out2 <= (Sdown+Flex))? out2 : na,title="Cross center", color=black, style=circles, linewidth=2, transp=80)
+
+//bgcolor(BGcoloring? (out2[0]>out2[1]? green:red) : na, transp=Transpa)
+
+
+//* Slightly improved by RooKiED
