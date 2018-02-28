@@ -1,0 +1,53 @@
+//@version=2
+study("Auto Pivots with S/R",overlay = true)
+
+// Inputs
+pivotType = input(defval=false, title="Check for Fib Pivots, standard by default", type=bool) // Option for Fib or Standard
+pivotExtend = input(defval = true, title = "Extend pivots through chart?", type = bool)
+pivotAuto = input(defval = true, title = "Only show most recent pivot set?", type = bool)
+//pivotAuto = pivotAutoI == true and pivotExtend == false ? true : false
+
+// Calculate start point
+currentTimePrimary = ismonthly ? year(timenow) : isweekly ? month(timenow) : isdaily ? weekofyear(timenow) : isintraday ? dayofweek(timenow) == saturday or dayofweek(timenow) == sunday ? friday : dayofweek(timenow) : na
+currentTimeSecondary = ismonthly ? year(timenow) : isweekly ? year(timenow) : isdaily ? year(timenow) : isintraday ? weekofyear(timenow): na
+currentBarTimePrimary = ismonthly ? year(time) : isweekly ? month(time) : isdaily ? weekofyear(time) : isintraday ? dayofweek(time) : na
+currentBarTimeSecondary = ismonthly ? year(time) : isweekly ? year(time) : isdaily ? year(time) : isintraday ? weekofyear(time) : na
+pivotTimeFrame = ismonthly ? '12M' : isweekly ? '1M' : isdaily ? '1W' : isintraday ? 'D' : '240'
+
+// Pull traditional HLC candle values
+pHigh = security(tickerid, pivotTimeFrame, high)
+pLow = security(tickerid, pivotTimeFrame, low)
+pClose = security(tickerid, pivotTimeFrame, close)
+
+// Calculate pivot points
+pp  = (pHigh + pLow + pClose ) / 3.0
+
+// First level
+r1 = pivotType ? pp + ((pHigh-pLow) * 0.382) : (2 * pp) - pLow
+s1 = pivotType ? pp - ((pHigh-pLow) * 0.382) : (2 * pp) - pHigh
+
+// Second level
+r2 = pivotType ? pp + ((pHigh-pLow) * 0.618) : pp + (pHigh - pLow)
+s2 = pivotType ? pp - ((pHigh-pLow) * 0.618) : pp - (pHigh - pLow)
+
+// Third level
+r3 = pivotType ? pp + ((pHigh-pLow) * 1.000) : pHigh + (2 * (pp - pLow))
+s3 = pivotType ? pp - ((pHigh-pLow) * 1.000) : pLow - (2 * (pHigh - pp))
+
+// Calculate pivot plots
+pivot = pivotAuto == true ? currentTimePrimary == currentBarTimePrimary and currentTimeSecondary == currentBarTimeSecondary ? security(tickerid, pivotTimeFrame, pp[1]) : na : security(tickerid, pivotTimeFrame, pp[1])
+pivot_r1 = pivotAuto == true ? currentTimePrimary == currentBarTimePrimary and currentTimeSecondary == currentBarTimeSecondary ? security(tickerid, pivotTimeFrame, r1[1]) : na : security(tickerid, pivotTimeFrame, r1[1])
+pivot_s1 = pivotAuto == true ? currentTimePrimary == currentBarTimePrimary and currentTimeSecondary == currentBarTimeSecondary ? security(tickerid, pivotTimeFrame, s1[1]) : na : security(tickerid, pivotTimeFrame, s1[1])
+pivot_r2 = pivotAuto == true ? currentTimePrimary == currentBarTimePrimary and currentTimeSecondary == currentBarTimeSecondary ? security(tickerid, pivotTimeFrame, r2[1]) : na : security(tickerid, pivotTimeFrame, r2[1])
+pivot_s2 = pivotAuto == true ? currentTimePrimary == currentBarTimePrimary and currentTimeSecondary == currentBarTimeSecondary ? security(tickerid, pivotTimeFrame, s2[1]) : na : security(tickerid, pivotTimeFrame, s2[1])
+pivot_r3 = pivotAuto == true ? currentTimePrimary == currentBarTimePrimary and currentTimeSecondary == currentBarTimeSecondary ? security(tickerid, pivotTimeFrame, r3[1]) : na : security(tickerid, pivotTimeFrame, r3[1])
+pivot_s3 = pivotAuto == true ? currentTimePrimary == currentBarTimePrimary and currentTimeSecondary == currentBarTimeSecondary ? security(tickerid, pivotTimeFrame, s3[1]) : na : security(tickerid, pivotTimeFrame, s3[1])
+
+// Plot pivots
+plot(pivot and pivot > 0 ? pivot : na, title="Pivot", style = linebr, color=fuchsia, linewidth=4, transp=0, trackprice = pivotExtend)
+plot(pivot_r1 and pivot_r1 > 0 ? pivot_r1 : na, title="R1", style=linebr, color=white, linewidth=3, transp=15, trackprice = pivotExtend)
+plot(pivot_s1 and pivot_s1 > 0 ? pivot_s1 : na, title="S1", style=linebr, color=red, linewidth=3, transp=15, trackprice = pivotExtend)
+plot(pivot_r2 and pivot_r2 > 0 ? pivot_r2 : na, title="R2", style=linebr, color=white, linewidth=2, transp=30, trackprice = pivotExtend) 
+plot(pivot_s2 and pivot_s2 > 0 ? pivot_s2 : na, title="S2", style=linebr, color=red, linewidth=2, transp=30, trackprice = pivotExtend) 
+plot(pivot_r3 and pivot_r3 > 0 ? pivot_r3 : na, title="R3", style=linebr, color=white, linewidth=1, transp=45, trackprice = pivotExtend)
+plot(pivot_s3 and pivot_s3 > 0 ? pivot_s3 : na, title="S3", style=linebr, color=red, linewidth=1, transp=45, trackprice = pivotExtend)
