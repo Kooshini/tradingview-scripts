@@ -1,0 +1,16 @@
+//@version=3
+study("Golden Volume | Kooshini")
+// inputs
+len = input(20, type = integer, title = 'Moving average length')
+show = input(true, title = 'Show moving average?')
+peak_multiplier = input(2, type = float, title = 'Peak Multiplier')
+// calcs
+ma = sma(volume,20)
+peaks = ma + ma * peak_multiplier
+clr = if (volume > peaks)
+    clr = yellow
+else
+    clr = close > open ? #53B987:#EB4D5C
+// plots    
+plot(volume, color = clr, style = columns, title = 'Volume')
+plot(show? ma:na, title = 'Moving average', color=white, style=area, transp=70)

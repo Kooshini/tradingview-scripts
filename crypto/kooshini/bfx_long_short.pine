@@ -1,0 +1,18 @@
+//@version=3
+//This script denotes the condition of margin traders on Btifinex exchange
+//Yellow Crosses mean both shorts and longs are increasing market is getting volatile
+//Gray Crosses means margin traders undecided on that candle
+//Green Crosses mean longs are increasing and shorts are being pulled out
+//Red Crosses mean Longs are being pulled out and shorts being put in
+study("Bitfinex BTC Long/Short | Kooshini")
+longs= change(security("BITFINEX:BTCUSDLONGS", period, close))
+shorts= change(security("BITFINEX:BTCUSDSHORTS", period, close))
+l= input(14, title="RSI length")
+rsilong= rsi(security("BITFINEX:BTCUSDLONGS", period, close),l)
+rsishort= rsi(security("BITFINEX:BTCUSDSHORTS", period, close),l)
+plot(rsilong, title="Longs", color=green, style=area, transp=10)
+plot(rsishort, title="Shorts", color=red, style=area, transp=10)
+
+bcolor= longs>ema(longs,10) and shorts>ema(shorts,10)? yellow: longs>ema(longs,10) and shorts<ema(shorts,10)? lime:longs<ema(longs,10) and shorts>ema(shorts,10)?red:gray
+plot(0, color=bcolor, style= cross, linewidth=3)
+hline(0)

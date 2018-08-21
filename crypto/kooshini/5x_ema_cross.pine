@@ -1,0 +1,23 @@
+//@version=3
+study(title="5x EMA Cross | Kooshini", overlay=true)
+ma1_p=input(8, title="EMA1 Length")
+ma2_p=input(13, title="EMA2 Length")
+ma3_p=input(21, title="EMA3 Length")
+ma4_p=input(55, title="EMA4 Length")
+ma5_p=input(200, title="EMA5 Length")
+// emas
+ma1 = ema(close, ma1_p)
+ma2 = ema(close, ma2_p)
+ma3 = ema(close, ma3_p)
+ma4 = ema(close, ma4_p)
+ma5 = ema(close, ma5_p)
+//plots
+plot(ma1, color = #0a63ff, linewidth = 3)
+plot(ma2, color = #bd00e2, linewidth = 3)
+plot(ma3, color = #f29100, linewidth = 3)
+plot(ma4, color = #fcf400, linewidth = 3)
+plot(ma5, color = #ffffff, linewidth = 3)
+//golden cross
+plot(crossover(ma4, ma5) ? ma4 : na, style = circles, linewidth = 7 , color = #edd040)
+//death cross
+plot(crossover(ma5, ma4) ? ma5 : na, style = circles, linewidth = 7 , color = #ff002e)

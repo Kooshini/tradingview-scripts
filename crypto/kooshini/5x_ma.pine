@@ -1,0 +1,17 @@
+//@version=3
+study(title="5x Moving Averages | Kooshini", shorttitle="MAs", overlay=true)
+exponential = input(true, title="Exponential MA?")
+
+src = close
+
+ma1 = exponential ? ema(src, 8) : sma(src, 8)
+ma2 = exponential ? ema(src, 13) : sma(src, 13)
+ma3 = exponential ? ema(src, 21) : sma(src, 21)
+ma4 = exponential ? ema(src, 55) : sma(src, 55)
+ma5 = exponential ? ema(src, 200) : sma(src, 200)
+
+plot( ma1, color=blue, style=line, title="MA1", linewidth=4)
+plot( ma2, color=purple, style=line, title="MA2", linewidth=4)
+plot( ma3, color=orange, style=line, title="MA3", linewidth=4)
+plot( ma4, color=yellow, style=line, title="MA4", linewidth=4)
+plot( ma5, color=white, style=line, title="MA5", linewidth=4)
