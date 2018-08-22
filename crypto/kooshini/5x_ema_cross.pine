@@ -21,3 +21,5 @@ plot(ma5, color = #ffffff, linewidth = 3)
 plot(crossover(ma4, ma5) ? ma4 : na, style = circles, linewidth = 7 , color = #edd040)
 //death cross
 plot(crossover(ma5, ma4) ? ma5 : na, style = circles, linewidth = 7 , color = #ff002e)
+// 21/55 cross fanning (earlier detection)
+plot(cross(ma3, ma4) ? ma3 : na, style = circles, linewidth = 8 , color = #00e5ff)
