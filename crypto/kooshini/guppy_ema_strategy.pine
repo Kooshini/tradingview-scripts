@@ -1,14 +1,12 @@
 //@version=3
 strategy("Guppy EMA Strategy | Kooshini", overlay=true)
-src = close
-
+src = close, 
 len1 = input(3, minval=1, title="Fast EMA 1")
 len2 = input(5, minval=1, title="Fast EMA 2")
 len3 = input(8, minval=1, title="Fast EMA 3")
 len4 = input(10, minval=1, title="Fast EMA 4")
 len5 = input(12, minval=1, title="Fast EMA 5")
 len6 = input(15, minval=1, title="Fast EMA 6")
-
 //Slow EMA
 len7 = input(30, minval=1, title="Slow EMA 7")
 len8 = input(35, minval=1, title="Slow EMA 8")
@@ -16,6 +14,48 @@ len9 = input(40, minval=1, title="Slow EMA 9")
 len10 = input(45, minval=1, title="Slow EMA 10")
 len11 = input(50, minval=1, title="Slow EMA 11")
 len12 = input(60, minval=1, title="Slow EMA 12")
+
+//Fast EMA
+ema1 = ema(src, len1)
+ema2 = ema(src, len2)
+ema3 = ema(src, len3)
+ema4 = ema(src, len4)
+ema5 = ema(src, len5)
+ema6 = ema(src, len6)
+//Slow EMA
+ema7 = ema(src, len7)
+ema8 = ema(src, len8)
+ema9 = ema(src, len9)
+ema10 = ema(src, len10)
+ema11 = ema(src, len11)
+ema12 = ema(src, len12)
+
+//Fast EMA Color Rules
+colfastL = (ema1 > ema2 and ema2 > ema3 and ema3 > ema4 and ema4 > ema5 and ema5 > ema6)
+colfastS = (ema1 < ema2 and ema2 < ema3 and ema3 < ema4 and ema4 < ema5 and ema5 < ema6)
+//Slow EMA Color Rules
+colslowL = ema7 > ema8 and ema8 > ema9 and ema9 > ema10 and ema10 > ema11 and ema11 > ema12 
+colslowS = ema7 < ema8 and ema8 < ema9 and ema9 < ema10 and ema10 < ema11 and ema11 < ema12 
+//Fast EMA Final Color Rules
+colFinal = colfastL and colslowL? aqua : colfastS and colslowS? orange : gray
+//Slow EMA Final Color Rules
+colFinal2 = colslowL  ? lime : colslowS ? red : gray
+//Fast EMA Plots
+p1=plot(ema1, title="Fast EMA 1", style=line, linewidth=2, color=colFinal)
+plot(ema2, title="Fast EMA 2", style=line, linewidth=1, color=colFinal)
+plot(ema3, title="Fast EMA 3", style=line, linewidth=1, color=colFinal)
+plot(ema4, title="Fast EMA 4", style=line, linewidth=1, color=colFinal)
+plot(ema5, title="Fast EMA 5", style=line, linewidth=1, color=colFinal)
+p2=plot(ema6, title="Fast EMA 6", style=line, linewidth=2, color=colFinal)
+fill(p1,p2,color=silver, transp=60)
+//Slow EMA Plots
+p3=plot(ema7, title="Slow EMA 7", style=line, linewidth=4, color=colFinal2)
+plot(ema8, title="Slow EMA 8", style=line, linewidth=3, color=colFinal2)
+plot(ema9, title="Slow EMA 9", style=line, linewidth=3, color=colFinal2)
+plot(ema10, title="Slow EMA 10", style=line, linewidth=3, color=colFinal2)
+plot(ema11, title="Slow EMA 11", style=line, linewidth=3, color=colFinal2)
+p4=plot(ema12, title="Slow EMA 12", style=line, linewidth=4, color=colFinal2)
+fill(p3,p4, color=silver, transp=60)
 
 // Date stuff
 FromMonth = input(defval = 1, minval = 1, maxval = 12, title = "From Month")
@@ -30,70 +70,9 @@ start     = timestamp(FromYear, FromMonth, FromDay, 00, 00)  // backtest start w
 finish    = timestamp(ToYear, ToMonth, ToDay, 23, 59)        // backtest finish window
 window()  => time >= start and time <= finish ? true : false // create function "within window of time"
 
-//Fast EMA
-ema1 = ema(src, len1)
-ema2 = ema(src, len2)
-ema3 = ema(src, len3)
-ema4 = ema(src, len4)
-ema5 = ema(src, len5)
-ema6 = ema(src, len6)
-
-//Slow EMA
-ema7 = ema(src, len7)
-ema8 = ema(src, len8)
-ema9 = ema(src, len9)
-ema10 = ema(src, len10)
-ema11 = ema(src, len11)
-ema12 = ema(src, len12)
-
-//Fast EMA Color Rules
-colfastL = (ema1 > ema2 and ema2 > ema3 and ema3 > ema4 and ema4 > ema5 and ema5 > ema6)
-colfastS = (ema1 < ema2 and ema2 < ema3 and ema3 < ema4 and ema4 < ema5 and ema5 < ema6)
-
-//Slow EMA Color Rules
-colslowL = ema7 > ema8 and ema8 > ema9 and ema9 > ema10 and ema10 > ema11 and ema11 > ema12 
-colslowS = ema7 < ema8 and ema8 < ema9 and ema9 < ema10 and ema10 < ema11 and ema11 < ema12
-
-doubleL = colfastL and colslowL
-doubleS = colfastS and colslowS
-
-//Fast EMA Final Color Rules
-colFinal = doubleL ? aqua : doubleS ? orange : colfastL ? green : gray
-//Slow EMA Final Color Rules
-colFinal2 = colslowL  ? lime : colslowS ? red : gray
-//Fast EMA Plots
-p1=plot(ema1, title="Fast EMA 1", style=line, linewidth=2, color=colFinal)
-plot(ema2, title="Fast EMA 2", style=line, linewidth=1, color=colFinal)
-plot(ema3, title="Fast EMA 3", style=line, linewidth=1, color=colFinal)
-plot(ema4, title="Fast EMA 4", style=line, linewidth=1, color=colFinal)
-plot(ema5, title="Fast EMA 5", style=line, linewidth=1, color=colFinal)
-p2=plot(ema6, title="Fast EMA 6", style=line, linewidth=2, color=colFinal)
-fill(p1,p2,color=colFinal, transp=60)
-//Slow EMA Plots
-p3=plot(ema7, title="Slow EMA 7", style=line, linewidth=4, color=colFinal2)
-plot(ema8, title="Slow EMA 8", style=line, linewidth=3, color=colFinal2)
-plot(ema9, title="Slow EMA 9", style=line, linewidth=3, color=colFinal2)
-plot(ema10, title="Slow EMA 10", style=line, linewidth=3, color=colFinal2)
-plot(ema11, title="Slow EMA 11", style=line, linewidth=3, color=colFinal2)
-p4=plot(ema12, title="Slow EMA 12", style=line, linewidth=4, color=colFinal2)
-fill(p3,p4, color=colFinal2, transp=60)
-
-fast_L_start    = not colfastL[1] and colfastL
-fast_L_end      = colfastL[1] and not colfastL
-fast_S_start    = not colfastS[1] and colfastS
-fast_S_end      = colfastS[1] and not colfastS
-slow_L_start    = not doubleL[1] and doubleL
-slow_L_end      = doubleL[1] and not doubleL
-slow_S_start    = not doubleS[1] and doubleS
-slow_S_end      = doubleS[1] and not doubleS
-
-fast_trend_switch = fast_L_start or fast_L_end or fast_S_start or fast_S_end
-slow_trend_switch = slow_L_start or slow_L_end or slow_S_start or slow_S_end
-
-strategy.entry("long", true, 1, when = window() and slow_trend_switch, comment="Long")
-strategy.close("long", when = window() and fast_trend_switch)
-strategy.entry("short", false, 1, when = window() and fast_trend_switch, comment="Short")
-strategy.close("short", when = window() and slow_trend_switch)
-
+strategy.entry("long", true, 1, when = window() and colslowL, comment="Long")
+strategy.close("long", when = window() and colslowS)
+strategy.entry("short", false, 1, when = window() and colslowS, comment="Short")
+strategy.close("short", when = window() and colslowL)
 	
 plot(strategy.position_size)
