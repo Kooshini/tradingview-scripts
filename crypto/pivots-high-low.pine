@@ -1,0 +1,52 @@
+study(title="Pivot Points High Low Extension", shorttitle="Pivots HL Ext", overlay=true)
+
+
+pvtLenL       = input(5, minval=1, title="Pivot Length Left Hand Side")
+pvtLenR       = input(3, minval=1, title="Pivot Length Right Hand Side")
+maxLvlLen     = input(0, minval=0, title="Maximum Extension Length")
+ShowHHLL      = input(false, title="Show HH,LL,LH,HL Markers On Pivots Points")
+WaitForClose  = input(true,  title="Wait For Candle Close Before Printing Pivot")
+
+
+// Get High and Low Pivot Points
+pvthi_ = pivothigh(high, pvtLenL, pvtLenR)
+pvtlo_ = pivotlow(low, pvtLenL, pvtLenR)
+
+// Force Pivot completion before plotting.
+Shunt = WaitForClose ? 1 : 0
+pvthi = pvthi_[Shunt]
+pvtlo = pvtlo_[Shunt]
+
+//  ||-----------------------------------------------------------------------------------------------------||
+//  ||---   Higher Highs, Lower Highs, Higher Lows, Lower Lows  -------------------------------------------||
+higherhigh = na(pvthi) ? na : ( valuewhen(pvthi, high[pvtLenR+Shunt], 1) < valuewhen(pvthi, high[pvtLenR+Shunt], 0) ) ? pvthi : na
+lowerhigh  = na(pvthi) ? na : ( valuewhen(pvthi, high[pvtLenR+Shunt], 1) > valuewhen(pvthi, high[pvtLenR+Shunt], 0) ) ? pvthi : na
+higherlow  = na(pvtlo) ? na : ( valuewhen(pvtlo, low[pvtLenR+Shunt], 1)  < valuewhen(pvtlo, low[pvtLenR+Shunt], 0) )  ? pvtlo : na
+lowerlow   = na(pvtlo) ? na : ( valuewhen(pvtlo, low[pvtLenR+Shunt], 1)  > valuewhen(pvtlo, low[pvtLenR+Shunt], 0) )  ? pvtlo : na
+
+// If selected Display the HH/LL above/below candle.
+plotshape(ShowHHLL ? higherhigh : na, title='HH', style=shape.triangleup,   location=location.abovebar, color=green, text="HH", offset=-pvtLenR-Shunt, transp=50)
+plotshape(ShowHHLL ? higherlow  : na, title='HL', style=shape.triangleup,   location=location.belowbar, color=green, text="HL", offset=-pvtLenR-Shunt, transp=0)
+plotshape(ShowHHLL ? lowerhigh  : na, title='LH', style=shape.triangledown, location=location.abovebar, color=maroon, text="LH", offset=-pvtLenR-Shunt, transp=0)
+plotshape(ShowHHLL ? lowerlow   : na, title='LL', style=shape.triangledown, location=location.belowbar, color=maroon, text="LL", offset=-pvtLenR-Shunt, transp=50)
+
+// Display Pivot points
+plot(not ShowHHLL ? pvthi : na, title='High Pivot *', style=circles, join=false, color=white, offset=-pvtLenR-Shunt, transp=50, linewidth=3)
+plot(not ShowHHLL ? pvtlo : na, title='Low Pivot *',  style=circles, join=false, color=white, offset=-pvtLenR-Shunt, transp=50, linewidth=3)
+plot(not ShowHHLL ? pvthi : na, title='High Pivot *', style=circles, join=false, color=green, offset=-pvtLenR-Shunt, transp=0, linewidth=2)
+plot(not ShowHHLL ? pvtlo : na, title='Low Pivot *',  style=circles, join=false, color=maroon, offset=-pvtLenR-Shunt, transp=0, linewidth=2)
+
+// Count How many candles for current Pivot Level, If new reset.
+counthi = barssince(not na(pvthi))
+countlo = barssince(not na(pvtlo))
+ 
+pvthis = fixnan(pvthi)
+pvtlos = fixnan(pvtlo)
+hipc = change(pvthis) != 0 ? na : maroon
+lopc = change(pvtlos) != 0 ? na : green
+
+
+plot((maxLvlLen == 0 or counthi < maxLvlLen) ? pvthis : na, color=hipc, transp=0, linewidth=1, offset=-pvtLenR-Shunt, title="Top Levels")
+plot((maxLvlLen == 0 or countlo < maxLvlLen) ? pvtlos : na, color=lopc, transp=0, linewidth=1, offset=-pvtLenR-Shunt, title="Bottom Levels")
+plot((maxLvlLen == 0 or counthi < maxLvlLen) ? pvthis : na, color=hipc, transp=0, linewidth=1, offset=0, title="Top Levels 2")
+plot((maxLvlLen == 0 or countlo < maxLvlLen) ? pvtlos : na, color=lopc, transp=0, linewidth=1, offset=0, title="Bottom Levels 2")
