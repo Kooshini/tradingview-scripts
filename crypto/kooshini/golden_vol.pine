@@ -1,5 +1,5 @@
 //@version=3
-study("Golden Volume | Kooshini", overlay=true)
+study("Golden Volume | Kooshini", overlay=false)
 // inputs
 malen = input(20, type = integer, title = 'Moving average length')
 ltfmalen = input(20, type = integer, title = 'Long Term Moving average length')
@@ -14,14 +14,17 @@ peaks = ma + ma * peak_multiplier
 
 lowvolume = volume < ltfma * ltf_multiplier
 highvolume = volume > peaks
-clr = close > open ? #53B987:#EB4D5C
+
+clr = if (volume > peaks)
+    clr = yellow
+else
+    clr = close > open ? #53B987:#EB4D5C
+
 // plots    
 plot(volume, color = clr, style = columns, title = 'Volume')
 plot(show? ma:na, title = 'Moving average', color=white, style=area, transp=70)
 bgcolor(color=lowvolume ? #5782C1 : na, transp=70)
 plotchar(lowvolume, char='▾', size=size.small, location=location.bottom, color=#1E88E5)
-bgcolor(color=highvolume ? yellow : na, transp=50)
-plotchar(highvolume, char='▴', size=size.small, location=location.bottom, color=yellow)
 
 // Alerts
 alertcondition(condition=highvolume,
