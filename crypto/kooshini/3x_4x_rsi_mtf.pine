@@ -1,0 +1,37 @@
+//@version=4
+study(title="Oversold/Overbought RSI Multi TF | Kooshini", overlay=true)
+//inputs
+src = input(close, title="Source", type=input.source)
+len = input(14, title="Length", type=input.integer)
+rsi_max = input(70, title="RSI Max", type=input.integer)
+rsi_min = input(30, title="RSI Min", type=input.integer)
+
+// rsi calcs
+rsi_now = rsi(src, len)
+rsi_5m = security(syminfo.ticker, "15", rsi(src, len))
+rsi_15m = security(syminfo.ticker, "30", rsi(src, len))
+rsi_60m = security(syminfo.ticker, "60", rsi(src, len))
+rsi_240m = security(syminfo.ticker, "240", rsi(src, len))
+
+rsi_oversold_3x = rsi_5m < rsi_min and rsi_15m < rsi_min and rsi_60m < rsi_min
+rsi_overbought_3x = rsi_5m > rsi_max and rsi_15m > rsi_max and rsi_60m > rsi_max
+rsi_oversold_4x = rsi_5m < rsi_min and rsi_15m < rsi_min and rsi_60m < rsi_min and 
+   rsi_240m < rsi_min
+rsi_overbought_4x = rsi_5m > rsi_max and rsi_15m > rsi_max and rsi_60m > rsi_max and 
+   rsi_240m > rsi_max
+
+bgcolor(color=rsi_oversold_3x ? #ffffff : na, transp=95)
+bgcolor(color=rsi_overbought_3x ? #ffffff : na, transp=95)
+bgcolor(color=rsi_oversold_4x ? #ffffff : na, transp=95)
+bgcolor(color=rsi_overbought_4x ? #ffffff : na, transp=95)
+
+plotchar(rsi_oversold_3x, location=location.belowbar, text="OS x3", color=#ff001a)
+plotchar(rsi_overbought_3x, location=location.abovebar, text="OB x3", color=#ffbf00)
+plotchar(rsi_oversold_4x, location=location.belowbar, text="OS x4", color=#ff001a)
+plotchar(rsi_overbought_4x, location=location.abovebar, text="OB x4", color=#ffbf00)
+
+// Alerts
+alertcondition(condition=rsi_overbought_3x, title="RSI Overbought x3", message="SELL: RSI Overbought on x3 timeframes")
+alertcondition(condition=rsi_oversold_3x, title="RSI Oversold x3", message="BUY: RSI Oversold on x3 timeframes")
+alertcondition(condition=rsi_overbought_4x, title="RSI Overbought x4", message="SELL: RSI Overbought on x4 timeframes")
+alertcondition(condition=rsi_oversold_4x, title="RSI Oversold x4", message="BUY: RSI Oversold on x4 timeframes")
