@@ -1,0 +1,155 @@
+/@version=3
+// The Chart Guys Price Shear, Abnormal Volume Alerts and RSI OB/OS Volume Climax Alerts all rolled into 1 FREE indicator 
+
+// Based on TCG Price Shear V2 by urisma and Volume Spikes by OstapChester
+
+// This powerful script combines Abnormal Volume Alerts with Price Shear which can be based on either ATR or % deviation from an ema, which intern can also be filtered by Abnormal Volume for less false signals.
+
+// Now Includes RSI Overbought / Oversold Volume Climax
+
+// Remember to set Alerts for Once Per Bar and to state the Asset Name in the Alert MSG
+
+// Enjoy  
+
+study(title="TCG Price Shear Plus", shorttitle="TCG Price Shear +",overlay=true)
+
+// Inputs
+
+ShearType = input(title='Price Shear - By', defval='ATR', options=['ATR', '%'], type=string)
+
+atr_notification_multiplier = input(title="Price Shear - ATR - Price Deviation From EMA", type=float,   defval=1, minval = 0.25, maxval = 5,  step = 0.25)
+percent_diff                = input(title="Price Shear - % -   Price Deviation From EMA",   type=float,   defval=1, minval = 0.25, maxval = 10, step = 0.25)
+
+atr_length = input(title="Price Shear - ATR", type=integer, defval=20)
+ema_length = input(title="Price Shear - EMA", type=integer, defval=20)
+
+VolumeSpike_Filter = input(title = 'Apply Abnormal Volume Filter to Price Shear', defval=true)
+
+
+EMA   = ema(close,ema_length)
+ATR   = atr(atr_length)*atr_notification_multiplier
+
+atr_multiplier = abs(close - EMA) / ATR
+
+Xa_Times     = input(title="Abnormal Volume - Filter For Price Shear - Volume Deviation from SMA", minval=1, defval=1.5, step=0.25)
+Xb_Times     = input(title="Abnormal Volume - Abnormal Volume Alert - Volume Deviation from SMA",  minval=1, defval=2.75, step=0.25)
+Volume_SMA   = input(title="Abnormal Volume - Volume SMA",                                         minval=1, defval=20)
+
+
+//RSIOBOSVolClimax  = input(true,  title="RSI Over Bought / Over Sold Volume Climax")
+
+RSILength         = input(14,    title="RSI OB/OS Volume Climax - RSI")
+RSIob             = input(70,    title="RSI OB/OS Volume Climax - RSI Overbought")
+RSIos             = input(30,    title="RSI OB/OS Volume Climax - RSI Oversold")
+
+// Calculations
+
+//maj          = input(true,  title = "Major Exhaustion Bars")
+
+
+VolumeSpike = volume > sma(volume[1], Volume_SMA) * Xa_Times ? 1 : 0
+
+
+raw_diff = EMA * (percent_diff/100)
+
+
+bear_shear_atr = abs(close - EMA) > ATR and close < EMA
+bull_shear_atr = abs(close - EMA) > ATR and close > EMA 
+
+bear_shear_atr_filtered = abs(close - EMA) > ATR and close < EMA and VolumeSpike
+bull_shear_atr_filtered = abs(close - EMA) > ATR and close > EMA and VolumeSpike
+
+
+bear_shear_percent = abs(close - EMA) > raw_diff and close  < EMA
+bull_shear_percent = abs(close - EMA) > raw_diff and close > EMA
+
+bear_shear_percent_filtered = abs(close - EMA) > raw_diff and close  < EMA and VolumeSpike
+bull_shear_percent_filtered = abs(close - EMA) > raw_diff and close > EMA and VolumeSpike
+
+
+bear_shear = ShearType == 'ATR' and  VolumeSpike_Filter ? bear_shear_atr_filtered : ShearType == 'ATR' ? bear_shear_atr : ShearType == '%' and  VolumeSpike_Filter ? bear_shear_percent_filtered : ShearType == '%' ? bear_shear_percent :na
+
+bull_shear = ShearType == 'ATR' and  VolumeSpike_Filter ? bull_shear_atr_filtered : ShearType == 'ATR' ? bull_shear_atr : ShearType == '%' and  VolumeSpike_Filter ? bull_shear_percent_filtered : ShearType == '%' ? bull_shear_percent :na
+
+
+Abnormal_Volume_Alert_Condition = volume > sma(volume[1], Volume_SMA) * Xb_Times ? 1 : 0
+
+Abnormal_Volume_Alert_Minus_Price_Shear = Abnormal_Volume_Alert_Condition and not (bear_shear or bull_shear)
+
+// RSI OB/OS Volume Climax Calculations
+
+RSI1 = rsi(close,RSILength)
+
+RSIOB = RSI1 > RSIob? 1:0
+RSIOS = RSI1 < RSIos? 1:0
+
+RSIOBClimax = RSIOB and Abnormal_Volume_Alert_Condition ? 1:0
+RSIOSClimax = RSIOS and Abnormal_Volume_Alert_Condition ? 1:0
+
+
+// Leledc Exhaustion Bar by glaz
+
+maj_qual = 6   //input(6)
+maj_len  = 30  //input(30)
+min_qual = 5   //input(5)
+min_len  = 5   //input(5)
+
+lele(qual,len)=>
+    bindex= 0.0
+    bindex:=nz(bindex[1],0)
+    sindex= 0.0
+    sindex:=nz(sindex[1],0)
+    ret=0
+    if (close>close[4]) 
+        bindex:=bindex + 1
+    if(close<close[4]) 
+        sindex:=sindex + 1
+    if (bindex>qual) and (close<open) and high>=highest(high,len) 
+        bindex:=0
+        ret:=-1
+    if ((sindex>qual) and (close>open) and (low<= lowest(low,len)))
+        sindex:=0
+        ret:=1
+    return=ret
+
+major=lele(maj_qual,maj_len)
+minor=lele(min_qual,min_len)
+
+MajorExaustionHigh = major==-1 ? 1 : 0
+MajorExaustionLow  = major==1  ? 1 : 0
+
+
+// Plots and Alerts
+
+// Bull / Bear Shear
+
+plotshape(bull_shear, title='Bull Shear',  location=location.abovebar, style=shape.triangledown, text="Bull\nShear",color=green) //"B\nu\nl\nl\n\n S\nh\ne\na\nr"
+plotshape(bear_shear, title='Bear Shear',  location=location.belowbar, style=shape.triangleup, text="Bear\nShear",color=red)     //'B\ne\na\nr\n\nS\nh\ne\na\nr'
+
+alertcondition(bull_shear, title='Bull Shear', message='Bull Shear')
+alertcondition(bear_shear, title='Bear Shear', message='Bear Shear')
+
+// Abnormal Volume
+
+//text='█'
+
+plotshape(Abnormal_Volume_Alert_Condition, title='Abnormal Volume', location=location.belowbar, style=shape.arrowdown, size=size.tiny, text="\n\n\n\nAbnormal\nVolume\n█\n█\n█",color=blue, transp=40)
+
+alertcondition(Abnormal_Volume_Alert_Condition, title='Abnormal_Volume_Alert', message='Abnormal_Volume_Alert')
+alertcondition(Abnormal_Volume_Alert_Minus_Price_Shear, title='Abnormal_Volume_Alert_Minus_Price_Shear', message='Abnormal_Volume_Alert_Minus_Price_Shear')
+
+// RSI OB/OS Volume Climax
+
+plotshape(RSIOBClimax, title='RSI OB Volume Climax', location=location.belowbar, style=shape.arrowdown, size=size.tiny, text="\n\n\n\n\n\n\n\n\nRSI OB\nVolume\nClimax\n█\n█\n█",color=red,   transp=40)
+plotshape(RSIOSClimax, title='RSI OS Volume Climax', location=location.belowbar, style=shape.arrowdown, size=size.tiny, text="\n\n\n\n\n\n\n\n\nRSI OS\nVolume\nClimax\n█\n█\n█",color=green, transp=40)
+
+alertcondition(RSIOBClimax, title='RSI OB Vol Climax', message='RSI Over Bought Volume Climax')
+alertcondition(RSIOSClimax, title='RSI OS Vol Climax', message='RSI Over Sold Volume Climax')
+
+// Leledc Exhaustion
+
+plotchar(MajorExaustionHigh ? high : na, title="Leledc Exhaustion High", char='•', location=location.absolute, color=red,  transp=40, size=size.small) 
+plotchar(MajorExaustionLow  ? low  : na, title="Leledc Exhaustion Low",  char='•', location=location.absolute, color=lime, transp=40, size=size.small)   
+
+alertcondition(MajorExaustionHigh, title='Leledc Exhaustion High', message='Leledc Exhaustion High')
+alertcondition(MajorExaustionLow,  title='Leledc Exhaustion Low',  message='Leledc Exhaustion Low')
