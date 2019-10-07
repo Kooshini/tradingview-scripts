@@ -1,0 +1,92 @@
+//@version=4
+study(title="OS Bounce", overlay=true)
+
+// inputs
+////////////////
+malen = input(20, type=input.integer, title='Moving average length')
+src = input(close, title="Source", type=input.source)
+len = input(14, type=input.integer, title='RSI length')
+rsi_max = input(70, title="RSI Max", type=input.integer)
+rsi_min = input(30, title="RSI Min", type=input.integer)
+showOB = input(title="Show Overbought", defval=false)
+showOS = input(title="Show Oversold", defval=true)
+fastLength = input(12)
+slowlength = input(26)
+MACDLength = input(9)
+volDev = input(title="Volume Deviation from SMA", minval=1, defval=5, step=0.25)
+volSMA = input(title="Volume SMA", minval=1, defval=20)
+wick_multiplier = input(title="Wick Multiplier", defval=2.5)
+close_thresh = input(title="Close Value Percent", defval=0.5, minval=0.0, maxval=1.0)
+vol_sma_multiplier = input(title="Volume SMA Multiplier", defval=1.4, minval=0.0, maxval=5.0)
+
+// macd calc
+////////////////
+MACD = security(syminfo.ticker, "60", ema(src, fastLength)) - security(syminfo.ticker, "60", ema(src, slowlength))
+aMACD = security(syminfo.ticker, "60", ema(MACD, MACDLength))
+delta = MACD - aMACD
+
+// macd cross highlight 
+//barcolor(crossover(delta, 0) ? color.fuchsia : na)
+
+// volume calcs
+////////////////
+volSpike = volume > sma(volume[1], volSMA) * volDev ? 1 : 0
+volDip = volume < sma(volume[1], volSMA) / 10 ? 1 : 0
+highVol = volume > sma(volume[1], volSMA) * vol_sma_multiplier ? 1 : 0
+
+// wicks
+////////////////
+top_body = max(close, open)
+bot_body = min(close, open)
+top_wick_size = high - top_body
+body_size = top_body - bot_body
+bot_wick_size = bot_body - low
+range = high - low
+
+bull_wick = (bot_wick_size > (wick_multiplier*body_size)) and (close > (low + (range*(1-close_thresh)))) and highVol
+bear_wick = (top_wick_size > (wick_multiplier*body_size)) and (close < (low + (range*close_thresh))) and highVol
+
+plotshape(bull_wick, "Bullish Wick Reversal", style=shape.triangleup, 
+   location=location.belowbar, color=color.green, size=size.tiny)
+plotshape(bear_wick, "Bearish Wick Reversal", style=shape.triangledown,
+   location=location.abovebar, color=color.red, size=size.tiny)
+
+// rsi calcs
+////////////////
+rsi_1 = security(syminfo.ticker, "15", rsi(src, len))
+rsi_2 = security(syminfo.ticker, "30", rsi(src, len))
+rsi_3 = security(syminfo.ticker, "60", rsi(src, len))
+rsi_4 = security(syminfo.ticker, "240", rsi(src, len))
+
+rsi_oversold_3x = rsi_1 < rsi_min and rsi_2 < rsi_min and rsi_3 < rsi_min
+rsi_overbought_3x = rsi_1 > rsi_max and rsi_2 > rsi_max and rsi_3 > rsi_max
+rsi_oversold_4x = rsi_1 < rsi_min and rsi_2 < rsi_min and rsi_3 < rsi_min and 
+   rsi_4 < rsi_min
+rsi_overbought_4x = rsi_1 > rsi_max and rsi_2 > rsi_max and rsi_3 > rsi_max and 
+   rsi_4 > rsi_max
+
+// background highlighting
+////////////////
+bgcolor(color=rsi_oversold_3x and showOS ? #ffffff : na, transp=95)
+bgcolor(color=rsi_overbought_3x and showOB ? #ffffff : na, transp=95)
+bgcolor(color=rsi_oversold_4x and showOS ? #ffffff : na, transp=95)
+bgcolor(color=rsi_overbought_4x and showOB ? #ffffff : na, transp=95)
+
+// text display
+////////////////
+plotchar((showOS) ? rsi_oversold_3x : na, location=location.belowbar, text="OS 3x", color=#ff001a)
+plotchar((showOB) ? rsi_overbought_3x : na, location=location.abovebar, text="OB 3x", color=#ffbf00)
+plotchar((showOS) ? rsi_oversold_4x : na, location=location.belowbar, text="OS 4x", color=#ff001a)
+plotchar((showOB) ? rsi_overbought_4x : na, location=location.abovebar, text="OB 4x", color=#ffbf00)
+
+// alerts
+////////////////
+
+// RSI alerts
+alertcondition(condition=rsi_overbought_3x, title="RSI Overbought x3", message="SELL: RSI Overbought on x3 timeframes")
+alertcondition(condition=rsi_oversold_3x, title="RSI Oversold x3", message="BUY: RSI Oversold on x3 timeframes")
+alertcondition(condition=rsi_overbought_4x, title="RSI Overbought x4", message="SELL: RSI Overbought on x4 timeframes")
+alertcondition(condition=rsi_oversold_4x, title="RSI Oversold x4", message="BUY: RSI Oversold on x4 timeframes")
+// Wick alerts
+alertcondition(condition=bull_wick, title="Bull Wick Reversal", message="BUY: RSI Overbought on {timeframe}")
+alertcondition(condition=bull_wick, title="Bear Wick Reversal", message="SELL: Bearish Wick on {timeframe}")
