@@ -3,7 +3,6 @@ study(title="OS Bounce", overlay=true)
 
 // inputs
 ////////////////
-malen = input(20, type=input.integer, title='Moving average length')
 src = input(close, title="Source", type=input.source)
 len = input(14, type=input.integer, title='RSI length')
 rsi_max = input(70, title="RSI Max", type=input.integer)
