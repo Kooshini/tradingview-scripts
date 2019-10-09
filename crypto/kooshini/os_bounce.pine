@@ -87,5 +87,5 @@ alertcondition(condition=rsi_oversold_3x, title="RSI Oversold x3", message="BUY:
 alertcondition(condition=rsi_overbought_4x, title="RSI Overbought x4", message="SELL: RSI Overbought on x4 timeframes")
 alertcondition(condition=rsi_oversold_4x, title="RSI Oversold x4", message="BUY: RSI Oversold on x4 timeframes")
 // Wick alerts
-alertcondition(condition=bull_wick, title="Bull Wick Reversal", message="BUY: RSI Overbought on {timeframe}")
-alertcondition(condition=bear_wick, title="Bear Wick Reversal", message="SELL: Bearish Wick on {timeframe}")
+alertcondition(condition=bull_wick, title="Bull Wick Reversal", message="BUY: Bullish Wick on {timeframe}")
+alertcondition(condition=bull_wick, title="Bear Wick Reversal", message="SELL: Bearish Wick on {timeframe}")
