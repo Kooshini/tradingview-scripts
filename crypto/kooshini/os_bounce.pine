@@ -8,14 +8,14 @@ src = input(close, title="Source", type=input.source)
 len = input(14, type=input.integer, title='RSI length')
 rsi_max = input(70, title="RSI Max", type=input.integer)
 rsi_min = input(28, title="RSI Min", type=input.integer)
-showOB = input(title="Show Overbought", defval=false)
+showOB = input(title="Show Overbought", defval=true)
 showOS = input(title="Show Oversold", defval=true)
 fastLength = input(12)
 slowlength = input(26)
 MACDLength = input(9)
 volDev = input(title="Volume Deviation from SMA", minval=1, defval=5, step=0.25)
 volSMA = input(title="Volume SMA", minval=1, defval=20)
-wick_multiplier = input(title="Wick Multiplier", defval=4)
+wick_multiplier = input(title="Wick Multiplier", defval=3)
 close_thresh = input(title="Close Value Percent", defval=2, minval=0.0, maxval=5.0)
 vol_sma_multiplier = input(title="Volume SMA Multiplier", defval=2, minval=0.0, maxval=5.0)
 
@@ -54,15 +54,15 @@ plotshape(bear_wick, "Bearish Wick Reversal", style=shape.triangledown,
 
 // rsi calcs
 ////////////////
-rsi_1 = security(syminfo.ticker, "5", rsi(src, len))
-rsi_2 = security(syminfo.ticker, "15", rsi(src, len))
-rsi_3 = security(syminfo.ticker, "30", rsi(src, len))
-rsi_4 = security(syminfo.ticker, "60", rsi(src, len))
+//rsi_1 = security(syminfo.ticker, "5", rsi(src, len))
+//rsi_2 = security(syminfo.ticker, "15", rsi(src, len))
+//rsi_3 = security(syminfo.ticker, "30", rsi(src, len))
+//rsi_4 = security(syminfo.ticker, "60", rsi(src, len))
 
-//rsi_1 = security(syminfo.ticker, "15", rsi(src, len))
-//rsi_2 = security(syminfo.ticker, "30", rsi(src, len))
-//rsi_3 = security(syminfo.ticker, "60", rsi(src, len))
-//rsi_4 = security(syminfo.ticker, "240", rsi(src, len))
+rsi_1 = security(syminfo.ticker, "15", rsi(src, len))
+rsi_2 = security(syminfo.ticker, "30", rsi(src, len))
+rsi_3 = security(syminfo.ticker, "60", rsi(src, len))
+rsi_4 = security(syminfo.ticker, "240", rsi(src, len))
 
 rsi_oversold_3x = rsi_1 < rsi_min and rsi_2 < rsi_min and rsi_3 < rsi_min
 rsi_overbought_3x = rsi_1 > rsi_max and rsi_2 > rsi_max and rsi_3 > rsi_max
@@ -95,7 +95,7 @@ alertcondition(condition=rsi_overbought_3x, title="RSI Overbought x3", message="
 alertcondition(condition=rsi_oversold_3x, title="RSI Oversold x3", message="BUY: RSI Oversold on x3 timeframes")
 alertcondition(condition=rsi_overbought_4x, title="RSI Overbought x4", message="SELL: RSI Overbought on x4 timeframes")
 alertcondition(condition=rsi_oversold_4x, title="RSI Oversold x4", message="BUY: RSI Oversold on x4 timeframes")
-alertcondition(condition=any_4x, title="RSI Oversold x4", message="RSI Oversold/Overbought on x4 timeframes")
+alertcondition(condition=any_4x, title="RSI Oversold/Overbought x4", message="RSI Oversold/Overbought on x4 timeframes")
 // Wick alerts
 alertcondition(condition=bull_wick, title="Bull Wick Reversal", message="BUY: RSI Overbought on {timeframe}")
 alertcondition(condition=bull_wick, title="Bear Wick Reversal", message="SELL: Bearish Wick on {timeframe}")
