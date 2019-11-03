@@ -2,7 +2,7 @@
 
 study(title="Reversal | Kooshini", shorttitle="Reversal | Kooshini", overlay=true)
 
-// Inputs f
+// Inputs
 LabelType = input(title='Show Text in Labels', defval=false)
 ShearType = input(title='Price Shear - By', defval='ATR', options=['ATR', '%'], type=input.string)
 atr_notification_multiplier = input(title="Price Shear - ATR - Price Deviation From EMA", type=input.float, defval=1, minval=0.25, maxval=5, step=0.25)
@@ -10,6 +10,7 @@ percent_diff = input(title="Price Shear - % -   Price Deviation From EMA", type=
 atr_length = input(title="Price Shear - ATR", type=input.integer, defval=20)
 ema_length = input(title="Price Shear - EMA", type=input.integer, defval=26)
 VolumeSpike_Filter = input(title='Apply Abnormal Volume Filter to Price Shear', defval=true)
+//LargeCandle_Filter = input(title='Apply Large Candlde Body Filter to Price Shear', defval=true)
 EMA = ema(close, ema_length)
 ATR = atr(atr_length) * atr_notification_multiplier
 atr_multiplier = abs(close - EMA) / ATR
@@ -25,9 +26,9 @@ showOS = input(title="Highlight Oversold", defval=true)
 rsi_max = input(68, title="RSI Max", type=input.integer)
 rsi_min = input(32, title="RSI Min", type=input.integer)
 
-
 // Calculations
 VolumeSpike = volume > sma(volume[1], Volume_SMA) * Xa_Times ? 1 : 0
+largeCandleBody = abs(open-close)*0.2> sma(abs(open-close), 60)
 raw_diff = EMA * (percent_diff / 100)
 bear_shear_atr = abs(close - EMA) > ATR and close < EMA
 bull_shear_atr = abs(close - EMA) > ATR and close > EMA
@@ -117,8 +118,8 @@ plotshape(not LabelType ? bull_shear : na, title='Bull Shear', location=location
 plotshape(not LabelType ? bear_shear : na, title='Bear Shear', location=location.belowbar, style=shape.triangledown, text="", color=color.red)  //'B\ne\na\nr\n\nS\nh\ne\na\nr'
 
 // RSI OB/OS Volume Climax
-plotshape(LabelType ? RSIOBClimax : na, title='RSI OB Volume Climax', location=location.abovebar, style=shape.arrowdown, size=size.tiny, text="RSI OB\nVolume\nClimax\n█\n█\n\n", color=color.red, transp=40)
-plotshape(LabelType ? RSIOSClimax : na, title='RSI OS Volume Climax', location=location.belowbar, style=shape.arrowdown, size=size.tiny, text="\n\nRSI OS\nVolume\nClimax\n█\n█", color=color.green, transp=40)
+plotshape(LabelType ? RSIOBClimax : na, title='RSI OB Volume Climax', location=location.abovebar, style=shape.arrowdown, size=size.tiny, text="RSI OB\nVolume\nClimax\n█\n█\n\n", color=color.blue, transp=40)
+plotshape(LabelType ? RSIOSClimax : na, title='RSI OS Volume Climax', location=location.belowbar, style=shape.arrowdown, size=size.tiny, text="\n\nRSI OS\nVolume\nClimax\n█\n█", color=color.white, transp=40)
 
 // Leledc Exhaustion
 plotchar(MajorExaustionHigh ? high : na, title="Leledc Exhaustion High", char='•', location=location.absolute, color=color.red, transp=40, size=size.small)
@@ -129,6 +130,23 @@ bgcolor(color=rsi_oversold_3x and showOS ? color.red : na, transp=95)
 bgcolor(color=rsi_overbought_3x and showOB ? color.green : na, transp=95)
 bgcolor(color=rsi_oversold_4x and showOS ? color.red : na, transp=85)
 bgcolor(color=rsi_overbought_4x and showOB ? color.green : na, transp=85)
+
+// Alert Conditions
+////////////////
+PriceShears = bull_shear or bear_shear
+PriceShears_Enhanced = PriceShears and largeCandleBody
+Exhaustions = MajorExaustionHigh or MajorExaustionLow
+Overbought_Oversold_3x4x = rsi_oversold_3x or rsi_overbought_3x or rsi_oversold_4x or rsi_overbought_4x
+
+Standard_Reversal_Alert_Condition = PriceShears or Exhaustions
+Standard_Reversal_Enhanced_Alert_Condition = PriceShears_Enhanced or Exhaustions
+
+Advanced_Reversal_Alert_Condition = Standard_Reversal_Alert_Condition and Overbought_Oversold_3x4x
+Advanced_Reversal_Enhanced_Alert_Condition = Standard_Reversal_Enhanced_Alert_Condition and Overbought_Oversold_3x4x
+
+//bgcolor(color=Advanced_Reversal_Enhanced_Alert_Condition ? color.purple : na, transp=20)
+//bgcolor(color=Advanced_Reversal_Alert_Condition ? color.purple : na, transp=20)
+
 
 // Alerts
 ////////////////
@@ -149,3 +167,10 @@ alertcondition(Abnormal_Volume_Alert_Minus_Price_Shear, title='Abnormal_Volume_A
 alertcondition(bull_shear, title='Bull Shear', message='Bull Shear')
 alertcondition(bear_shear, title='Bear Shear', message='Bear Shear')
 
+// Standard Reversal
+alertcondition(Standard_Reversal_Alert_Condition, title='Standard Reversal', message='Standard Reversal Shear/Exhaustion {ticker}-{timeframe}')
+alertcondition(Standard_Reversal_Enhanced_Alert_Condition, title='Standard Reversal (Enhanced)', message='Standard Reversal Shear/Exhaustion Enhanced Detected {ticker}-{timeframe}')
+
+// Advanced Reversal 
+alertcondition(Advanced_Reversal_Alert_Condition, title='Advanced Reversal', message='Advanced Reversal Shear/Exhaustion {ticker}-{timeframe}')
+alertcondition(Advanced_Reversal_Enhanced_Alert_Condition, title='Advanced Reversal (Enhanced)', message='Advanced Reversal Shear/Exhaustion Plus Oversold/Overbought Enhanced Detected {ticker}-{timeframe}')
