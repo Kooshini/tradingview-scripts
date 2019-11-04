@@ -144,9 +144,10 @@ Standard_Reversal_Enhanced_Alert_Condition = PriceShears_Enhanced or Exhaustions
 Advanced_Reversal_Alert_Condition = Standard_Reversal_Alert_Condition and Overbought_Oversold_3x4x
 Advanced_Reversal_Enhanced_Alert_Condition = Standard_Reversal_Enhanced_Alert_Condition and Overbought_Oversold_3x4x
 
-//bgcolor(color=Advanced_Reversal_Enhanced_Alert_Condition ? color.purple : na, transp=20)
-//bgcolor(color=Advanced_Reversal_Alert_Condition ? color.purple : na, transp=20)
-
+// debug alert highlighting for charts to see when alerts woulf fire
+//bgcolor(color=Standard_Reversal_Enhanced_Alert_Condition ? color.purple : na, transp=20)
+//bgcolor(color=Advanced_Reversal_Alert_Condition ? color.purple : na, transp=20)//
+//barcolor(largeCandleBody ? color.white : na)
 
 // Alerts
 ////////////////
