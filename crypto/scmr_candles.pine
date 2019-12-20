@@ -1,0 +1,138 @@
+study(title="SCMRCANDLES",  precision=0, overlay = true)
+HC = input(defval=false, title="-----> High Contrast. Automatic Dark Background")
+showPT=input(true, title="Show Pivots Text", type=bool)
+showRev=input(true, title="Show Confirmed Upside Reversals Text", type=bool)
+showDet=input(true, title="Show Early Detection", type=bool)
+ 
+ 
+//Declare General Trend
+ 
+TL1(src, len) =>
+    weight = 3.5 / (len + 1)
+    sum = nz(sum[1]) - nz(src[len]) + src
+    ma = na(src[len]) ? na : sum/len
+    out = na(out[1]) ? ma : (src - out[1]) * weight + out[1]
+    out
+TL(src, len) =>
+    weight = 2 / (len + 1)
+    sum = nz(sum[1]) - nz(src[len]) + src
+    ma = na(src[len]) ? na : sum/len
+    out = na(out[1]) ? ma : (src - out[1]) * weight + out[1]
+    out    
+   
+TL3 = TL(low,16) - TL1(low,16)
+TL4 = percentrank(TL3, 8)
+TL5 = (TL3 < 0 and TL4 > 75) ? 1 : 0
+ 
+//////
+ 
+TH1(src, len) =>
+    weight = 3.5 / (len + 1)
+    sum = nz(sum[1]) - nz(src[len]) + src
+    ma = na(src[len]) ? na : sum/len
+    out = na(out[1]) ? ma : (src - out[1]) * weight + out[1]
+    out
+TH(src, len) =>
+    weight = 2 / (len + 1)
+    sum = nz(sum[1]) - nz(src[len]) + src
+    ma = na(src[len]) ? na : sum/len
+    out = na(out[1]) ? ma : (src - out[1]) * weight + out[1]
+    out  
+   
+TH3 = TH1(high,16) - TH(high,16)
+TH4 = percentrank(TH3, 8)
+TH5 = (TH3 > 0 and TH4 < 25) ? 1 : 0    
+ 
+//Bar Offsets
+offset1 = low - (low * .9998)
+h = iff(TH5, TH(high,16), TH1(high,16))
+o1 = offset(h,1)
+o2 = offset(h,2)
+o3 = offset(h,3)
+o4 = offset(h,4)
+l = iff(TL5, TL(low,16), TL1(low,16))
+i1 = offset(l,1)
+i2 = offset(l,2)
+i3 = offset(l,3)
+i4 = offset(l,4)
+i5 = offset(l,5)
+//min lows
+ll1 = lowest(low,2)
+ll2 = lowest(low,3)
+// Offset
+Minl = offset(ll1, 1)
+Minla = offset(ll1, 2)
+Minl2 = offset(ll2,1)
+//max highs
+hh1 = highest(high,2)
+hh2 = highest(high,3)
+// Offset
+Maxh = offset(hh1, 1)
+Maxh2 = offset(hh2,1)
+Maxh3 = offset(hh2,2)
+ 
+//Decisions
+//isIntra() => dayofweek > dayofweek(1) and change(dayofweek(1) = dayofweek(1,1)
+isBO() => title = "Price Breakout", close[3] < i3 and close[2] < i2 and close[1] < i1 and close > h
+isBD() => title = "Price Breakdown", close[3] > o3 and close[2] > o2 and close[1] > o1 and close < l
+isUR() => title = "Price Pivot, Downside warning", close[2] > o2 and close < close[1] and close < h and close > Minl2 and close < open and close < low[1]
+isBOn() => title = "Price Broke Out, no followthrough, treat as pivot", (close[4] < i4 and close[3] < i3 and close[2] < i2 and close[1] > o1 and close > Minl and close < high[1]) or (close[5] < i5 and close[4] < i4 and close[3] < i3 and close[2] > o2 and close < h and close[1] > Minla and close > Minl and close < high[1] and open > close)
+isUCRU() => title = "Price UNconfirmed Reversal Up", close[1] < i1 and close > l and close < h and close > open
+isUNCRD() => title = "Price Pivot, Downside Bias", (close[2] > i2 and low[1] < i1 and close[1] < i1 and high < high[1] and close < l and low > low[1] and close > close[1]) or (low[2] > i2 and low[1] < i1 and close[1] > i1 and close > low[1] and close < l) or (close[2] > i2 and close[1] < i2 and low[1] > low[2] and (close > low[1] or close > low[2]) and low > low[2] and close < l)
+isP() => title = "Price Pivot", (close[1] < o1 and close[2] > i2 and low[1] < i1 and close[1] > i1 and high < high[1] and high > l and (close < l or close < close[1]) and close > low[1] and open < close) or (close[4] > o4 and close[3] < i3 and close[1] > o1 and close > h and close[1] < Maxh3 and open > close and close > low[1])
+// isP2
+is5HR() => title = "Price 5 Bar High, then reversal, 1-3 bar downside bias", high > (Maxh2 + .01) and close < open and close[1] > o1 and close[1] > open[1] and close > l
+isUW() => title = "Price in WEAK Uptrend", (close[1] < o1 and close > TH(high, 16) and close < high[1])
+isUp() => title = "Price in Uptrend", close > TH(high,16)
+isDown() => title = "Price in Downtrend", close < TL(low, 16)
+isN() => title = "Price is Neutral, no definable sequence", (close > TL(low, 16) and close < TH(high, 16)) or close > TH(high,16) and close[1] < TL(low,16)
+ 
+//Plot BarColor
+barcolor(isBO() ? yellow : isBD() ? purple : isUR() ? orange : isBOn() ? olive : isUCRU() ? #0066FF : isUNCRD() ? #FF00FF : isP() ? #FF00FF : is5HR() ? #758A0A : isUW() ? green : isUp() ? lime : isDown() ? red : isN() ? #9FB4B4 : na)
+ 
+ 
+//Condition Offsets
+Piv = isUR() or isBOn() or isP() or isUNCRD()
+RevUp = (offset(isUCRU(), 1) and close > high[1]) or
+    (offset(isUCRU(), 2) and close[1] <= high[2] and close[1] > low[1] and low[1] > Minl2 and close > high[2])
+RevX = (((offset(isUCRU(), 2) and close[1] > high[2] and close < open and (high < high[1] or close < high[2])) or
+    (offset(isUCRU(), 3) and close[2] > high[3] and close[1] > high[3] and close[1] > lowest(low,3) and low[2] > low[4] and (open > close and low < open[2] and low < open[3])) or
+    (offset(isUCRU(), 3) and close[2] <= high[3] and close[1] > high[3] and close[1] > lowest(low,3) and low[2] > low[4])) and (high <= high[1] or (open > close and low < max(open[2], close[2]))))
+   
+RevX1 = offset(RevX, 1)
+RevX2 = offset(RevX, 2)
+RevX3 =  ((close[5] > i5 and close[4] < i4 and close[3] > i3) and offset(isUCRU(), 3) and close[2] > high[3] and close[1] < open[1] and (high[1] < high[2] or close[1] < high[3] or low < high[3]))
+RevXX = (RevX1 or RevX2 or RevX3) and (close > high[2] and close > high[3])
+ 
+//Define Warning
+Early = abs((close[3] > open[3] and close[2] > open[2] and close[1] > open[1] and close < open) or
+    (close[3] > open[3] and close[2] > open[2] and close[1] < open[1] and close > open) or
+    (close[3] > open[3] and close[2] < open[2] and close[1] > open[1] and close > open) or
+    (close[3] < open[3] and close[2] > open[2] and close[1] > open[1] and close > open) or
+    (close[3] > open[3] and close[2] > open[2] and close[1] > open[1] and close > open))*(low*.9999525)
+ 
+EarlyD = abs((close[3] < open[3] and close[2] < open[2] and close[1] < open[1] and close > open) or
+    (close[3] < open[3] and close[2] < open[2] and close[1] > open[1] and close < open) or
+    (close[3] < open[3] and close[2] > open[2] and close[1] < open[1] and close < open) or
+    (close[3] > open[3] and close[2] < open[2] and close[1] < open[1] and close < open) or
+    (close[3] < open[3] and close[2] < open[2] and close[1] < open[1] and close < open))*(high*1.00009525)
+ 
+EarlyTd = abs(close > TL(low, 16) and close < l)*(low*.9999525)
+EarlyTu = abs(close < TH(high, 16) and close > h)*(high*1.00009525)
+ 
+ 
+//Plot Background
+bgcolor(HC ? #1A1A1A : na)
+ 
+//CharacterText
+plotchar(showDet ? Early : na, char='■', location=location.absolute, color=lime, transp = 70)
+plotchar(showDet ? EarlyD : na, char='■', location=location.absolute, color=red, transp = 70)
+plotchar(showDet ? EarlyTd : na, char='⬥', location=location.absolute, color=red)
+plotchar(showDet ? EarlyTu : na, char='⬥', location=location.absolute, color=lime)
+ 
+plotchar(showPT and close > open ? Piv : na, char='P', location=location.belowbar, color=blue)
+plotchar(showPT and close < open ? Piv : na, char='P', location=location.abovebar, color=blue)
+ 
+plotchar(showRev ? RevUp : na, char='ʘ', location=location.belowbar, color=blue)
+plotchar(showRev ? RevX : na, char='X', location=location.abovebar, color=red)
+plotchar(showRev ? RevXX : na, char='Z', location=location.belowbar, color=green)
