@@ -1,0 +1,19 @@
+//@version=4
+study(title="Multi EMA | fiatisdead", shorttitle="EMA - fiatisdead", overlay=true)
+
+// EMA vars
+ema8 = ema(close, 8)
+ema13 = ema(close, 13)
+ema21 = ema(close, 21)
+ema55 = ema(close, 55)
+ema100 = ema(close, 100)
+ema200 = ema(close, 200)
+
+// EMA plots
+plot(ema8, color=#1F7ECC, linewidth=2, title="EMA 8", editable=true)
+plot(ema13, color=#3D296D, linewidth=2, title="EMA 13", editable=true)
+plot(ema21, color=#D48006, linewidth=2, title="EMA 21", editable=true)
+plot(ema55, color=#EDDA39, linewidth=2, title="EMA 55", editable=true)
+plot(ema100, color=#C03932, linewidth=2, title="EMA 100", editable=true)
+plot(ema200, color=#FFFFFF, linewidth=2, title="EMA 200", editable=true)
+
