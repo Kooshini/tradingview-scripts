@@ -26,8 +26,10 @@ RSIos = input(30, title="RSI OB/OS Volume Climax - RSI Oversold", type=input.int
 showOB = input(title="Highlight Overbought", defval=true)
 showOS = input(title="Highlight Oversold", defval=true)
 showCHV = input(title='Highlight Consecutive Low Volume', defval=true)
+showLowVol = input(title="Highlight Low Volume Candles", defval=true)
 rsi_max = input(68, title="RSI Max", type=input.integer)
 rsi_min = input(32, title="RSI Min", type=input.integer)
+
 
 // Calculations
 ltfma = ema(volume, ltf_malength)
@@ -146,6 +148,7 @@ bgcolor(color=rsi_overbought_4x and showOB ? color.green : na, transp=75)
 bgcolor(color=ConsecutiveLowVol and showCHV ? color.blue : na, transp=25, offset=-2)
 bgcolor(color=ConsecutiveLowVol and showCHV ? color.blue : na, transp=25, offset=-1)
 bgcolor(color=ConsecutiveLowVol and showCHV ? color.blue : na, transp=25, offset=0)
+barcolor(LowVol1 and showLowVol ? color.white : na)
 
 // Alert Conditions
 ////////////////
@@ -195,3 +198,4 @@ alertcondition(Standard_Reversal_Enhanced_Alert_Condition, title='Standard Rever
 // Advanced Reversal 
 alertcondition(Advanced_Reversal_Alert_Condition, title='Advanced Reversal', message='Advanced Reversal Shear/Exhaustion {{exchange}}:{{ticker}}-{timeframe}')
 alertcondition(Advanced_Reversal_Enhanced_Alert_Condition, title='Advanced Reversal (Enhanced)', message='Advanced Reversal Shear/Exhaustion Plus Oversold/Overbought Enhanced Detected {{exchange}}:{{ticker}}-{timeframe}')
+

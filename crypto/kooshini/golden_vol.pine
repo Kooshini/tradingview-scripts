@@ -1,35 +1,44 @@
-//@version=3
+//@version=4
 study("Golden Volume | Kooshini", overlay=false)
 // inputs
-malen = input(20, type = integer, title = 'Moving average length')
-ltfmalen = input(20, type = integer, title = 'Long Term Moving average length')
-show = input(true, title = 'Show moving average?')
-peak_multiplier = input(2, type = float, title = 'Peak Multiplier')
-ltf_multiplier = input(0.3, type = float, title = 'Low Vol Multiplier')
+malen = input(20, type=input.integer, title='Moving average length')
+ltfmalen = input(20, type=input.integer, title='Long Term Moving average length')
+show = input(true, title='Show moving average?')
+//peak_multiplier = input(3.5, type=input.float, title='High Vol Multiplier')
+ltf_multiplier = input(0.32, type=input.float, title='Low Vol Multiplier')
+Volume_SMA = input(title="Abnormal Volume - Volume SMA", minval=1, defval=20)
+Xb_Times = input(title="Abnormal Volume - Abnormal Volume Alert - Volume Deviation from SMA", minval=1, defval=3.25, step=0.25)
+showLowVol = input(title="Highlight Low Volume Candles", defval=true)
 
 // calcs
-ma = ema(volume,malen)
-ltfma = ema(volume,ltfmalen)
-peaks = ma + ma * peak_multiplier
+ma = sma(volume, malen)
+ltfma = ema(volume, ltfmalen)
+//peaks = ma + ma * peak_multiplier
 
 lowvolume = volume < ltfma * ltf_multiplier
-highvolume = volume > peaks
+//highvolume = volume > peaks
+Abnormal_Volume = volume > sma(volume[1], Volume_SMA) * Xb_Times ? 1 : 0
 
-clr = if (volume > peaks)
-    clr = yellow
+clr = if volume > sma(volume[1], Volume_SMA) * Xb_Times
+    clr = color.yellow
+    clr
 else
-    clr = close > open ? #53B987:#EB4D5C
+    clr = close > open ? #53B987 : #EB4D5C
+    clr
+
+barcolor(Abnormal_Volume ? color.yellow : na)
+barcolor(lowvolume and showLowVol ? color.white : na)
+
+// calculations
+//consecutivelowvol = volume < ltfma * ltf_multiplier and volume[1] < ltfma * ltf_multiplier and volume[2] < ltfma * ltf_multiplier
+
+// debug
+//bgcolor(color=consecutivelowvol ? color.orange : na, transp=20)//
 
 // plots    
-plot(volume, color = clr, style = columns, title = 'Volume')
-plot(show? ma:na, title = 'Moving average', color=white, style=area, transp=70)
-bgcolor(color=lowvolume ? #5782C1 : na, transp=70)
-plotchar(lowvolume, char='▾', size=size.small, location=location.bottom, color=#1E88E5)
+plot(volume, color=clr, style=plot.style_columns, title='Volume')
+plot(show ? ma : na, title='Moving average', color=color.white, style=plot.style_area, transp=70)
 
 // Alerts
-alertcondition(condition=highvolume,
-     title="High Volume Alert",
-     message="Volume is higher than the EMA of the last X bars")
-alertcondition(condition=lowvolume,
-     title="Low Volume Alert",
-     message="Volume is x% percent lower than the X EMA, potential move imminent")
+//alertcondition(condition=highvolume, title="High Volume Alert", message="Volume is higher than the EMA of the last X bars")
+//alertcondition(condition=lowvolume, title="Low Volume Alert", message="Volume is x% percent lower than the X EMA, potential move imminent")
