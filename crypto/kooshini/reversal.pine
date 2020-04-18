@@ -10,6 +10,8 @@ percent_diff = input(title="Price Shear - % -   Price Deviation From EMA", type=
 atr_length = input(title="Price Shear - ATR", type=input.integer, defval=20)
 ema_length = input(title="Price Shear - EMA", type=input.integer, defval=26)
 VolumeSpike_Filter = input(title='Apply Abnormal Volume Filter to Price Shear', defval=true)
+ltf_multiplier = input(0.32, type=input.float, title='Low Vol Multiplier')
+ltf_malength = input(20, type=input.integer, title='Long Term Moving average length')
 //LargeCandle_Filter = input(title='Apply Large Candlde Body Filter to Price Shear', defval=true)
 EMA = ema(close, ema_length)
 ATR = atr(atr_length) * atr_notification_multiplier
@@ -23,10 +25,12 @@ RSIob = input(70, title="RSI OB/OS Volume Climax - RSI Overbought", type=input.i
 RSIos = input(30, title="RSI OB/OS Volume Climax - RSI Oversold", type=input.integer)
 showOB = input(title="Highlight Overbought", defval=true)
 showOS = input(title="Highlight Oversold", defval=true)
+showCHV = input(title='Highlight Consecutive Low Volume', defval=true)
 rsi_max = input(68, title="RSI Max", type=input.integer)
 rsi_min = input(32, title="RSI Min", type=input.integer)
 
 // Calculations
+ltfma = ema(volume, ltf_malength)
 VolumeSpike = volume > sma(volume[1], Volume_SMA) * Xa_Times ? 1 : 0
 largeCandleBody = abs(open-close)*0.2> sma(abs(open-close), 60)
 raw_diff = EMA * (percent_diff / 100)
@@ -62,6 +66,13 @@ rsi_oversold_4x = rsi_1 < rsi_min and rsi_2 < rsi_min and rsi_3 < rsi_min and rs
 rsi_overbought_4x = rsi_1 > rsi_max and rsi_2 > rsi_max and rsi_3 > rsi_max and rsi_4 > rsi_max
 
 any_4x = rsi_overbought_4x or rsi_oversold_4x
+
+
+// Consecutive Low Volume calcs
+LowVol1 = volume < ltfma * ltf_multiplier
+LowVol2 = volume[1] < ltfma * ltf_multiplier
+LowVol3 = volume[2] < ltfma * ltf_multiplier
+ConsecutiveLowVol = LowVol1 and LowVol2 and LowVol3
 
 // RSI OB/OS Volume Climax Calculations
 RSI1 = rsi(close, RSILength)
@@ -126,15 +137,21 @@ plotchar(MajorExaustionHigh ? high : na, title="Leledc Exhaustion High", char='â
 plotchar(MajorExaustionLow ? low : na, title="Leledc Exhaustion Low", char='â€¢', location=location.absolute, color=color.lime, transp=40, size=size.small)
 
 // OS/OB highlighting
-bgcolor(color=rsi_oversold_3x and showOS ? color.red : na, transp=95)
-bgcolor(color=rsi_overbought_3x and showOB ? color.green : na, transp=95)
-bgcolor(color=rsi_oversold_4x and showOS ? color.red : na, transp=85)
-bgcolor(color=rsi_overbought_4x and showOB ? color.green : na, transp=85)
+bgcolor(color=rsi_oversold_3x and showOS ? color.red : na, transp=85)
+bgcolor(color=rsi_overbought_3x and showOB ? color.green : na, transp=85)
+bgcolor(color=rsi_oversold_4x and showOS ? color.red : na, transp=75)
+bgcolor(color=rsi_overbought_4x and showOB ? color.green : na, transp=75)
+
+// Consecutive Low Volume highlighting
+bgcolor(color=ConsecutiveLowVol and showCHV ? color.blue : na, transp=25, offset=-2)
+bgcolor(color=ConsecutiveLowVol and showCHV ? color.blue : na, transp=25, offset=-1)
+bgcolor(color=ConsecutiveLowVol and showCHV ? color.blue : na, transp=25, offset=0)
 
 // Alert Conditions
 ////////////////
 PriceShears = bull_shear or bear_shear
 PriceShears_Enhanced = PriceShears and largeCandleBody
+
 Exhaustions = MajorExaustionHigh or MajorExaustionLow
 Overbought_Oversold_3x4x = rsi_oversold_3x or rsi_overbought_3x or rsi_oversold_4x or rsi_overbought_4x
 
@@ -144,13 +161,16 @@ Standard_Reversal_Enhanced_Alert_Condition = PriceShears_Enhanced or Exhaustions
 Advanced_Reversal_Alert_Condition = Standard_Reversal_Alert_Condition and Overbought_Oversold_3x4x
 Advanced_Reversal_Enhanced_Alert_Condition = Standard_Reversal_Enhanced_Alert_Condition and Overbought_Oversold_3x4x
 
-// debug alert highlighting for charts to see when alerts woulf fire
+// debug alert highlighting for charts to see when alerts would fire
 //bgcolor(color=Standard_Reversal_Enhanced_Alert_Condition ? color.purple : na, transp=20)
 //bgcolor(color=Advanced_Reversal_Alert_Condition ? color.purple : na, transp=20)//
 //barcolor(largeCandleBody ? color.white : na)
 
 // Alerts
 ////////////////
+
+// Consecutive Low Volume
+alertcondition(ConsecutiveLowVol, title="Consecutive Low Volume", message='Consecutive Low Volume over x3 bars - {{exchange}}:{{ticker}}-{timeframe}')
 
 // RSI Vol Climax
 alertcondition(RSIOBClimax, title='RSI OB Vol Climax', message='RSI Over Bought Volume Climax')
@@ -169,9 +189,9 @@ alertcondition(bull_shear, title='Bull Shear', message='Bull Shear')
 alertcondition(bear_shear, title='Bear Shear', message='Bear Shear')
 
 // Standard Reversal
-alertcondition(Standard_Reversal_Alert_Condition, title='Standard Reversal', message='Standard Reversal Shear/Exhaustion {ticker}-{timeframe}')
-alertcondition(Standard_Reversal_Enhanced_Alert_Condition, title='Standard Reversal (Enhanced)', message='Standard Reversal Shear/Exhaustion Enhanced Detected {ticker}-{timeframe}')
+alertcondition(Standard_Reversal_Alert_Condition, title='Standard Reversal', message='Standard Reversal Shear/Exhaustion {{exchange}}:{{ticker}}-{timeframe}')
+alertcondition(Standard_Reversal_Enhanced_Alert_Condition, title='Standard Reversal (Enhanced)', message='Standard Reversal Shear/Exhaustion Enhanced Detected {{exchange}}:{{ticker}}-{timeframe}')
 
 // Advanced Reversal 
-alertcondition(Advanced_Reversal_Alert_Condition, title='Advanced Reversal', message='Advanced Reversal Shear/Exhaustion {ticker}-{timeframe}')
-alertcondition(Advanced_Reversal_Enhanced_Alert_Condition, title='Advanced Reversal (Enhanced)', message='Advanced Reversal Shear/Exhaustion Plus Oversold/Overbought Enhanced Detected {ticker}-{timeframe}')
+alertcondition(Advanced_Reversal_Alert_Condition, title='Advanced Reversal', message='Advanced Reversal Shear/Exhaustion {{exchange}}:{{ticker}}-{timeframe}')
+alertcondition(Advanced_Reversal_Enhanced_Alert_Condition, title='Advanced Reversal (Enhanced)', message='Advanced Reversal Shear/Exhaustion Plus Oversold/Overbought Enhanced Detected {{exchange}}:{{ticker}}-{timeframe}')
