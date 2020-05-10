@@ -1,0 +1,21 @@
+//@version=4
+study(title="SMA/EMA | Kooshini", shorttitle="SMA/EMA", overlay=true)
+// EMA data
+ema12 = ema(close, 12)
+ema26 = ema(close, 26)
+ema50 = ema(close, 50)
+ema200 = ema(close, 200)
+ema200D = security(syminfo.ticker, "D", ema(close, 200))
+// SMA data
+sma50 = sma(close, 50)
+sma200 = sma(close, 200)
+// EMA
+plot(ema12, color=#6f92ce, linewidth=2, title="EMA 12", editable=true)
+plot(ema26, color=#e98e39, linewidth=2, title="EMA 26", editable=true)
+//plot(ema50, color=#ffffff, linewidth=2, title="EMA 50", editable=true)
+//plot(ema200, color=#d4ca32, linewidth=2, title="EMA 200", editable=true)
+plot(ema200D, color=#d302c9, linewidth=2, title="D EMA 200", editable=true)
+// SMA
+plot(sma50, color=#ffffff, linewidth=2, title="SMA 50", editable=true)
+plot(sma200, color=#d4ca32, linewidth=2, title="SMA 200", editable=true)
+plot(cross(ema12, ema26) ? ema12 : na, style=plot.style_circles, color=color.white, linewidth=4, title="Cross", trackprice=false)
